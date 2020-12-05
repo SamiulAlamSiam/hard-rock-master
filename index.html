@@ -1,0 +1,174 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Hard Rock Solution - Song Lyric App</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- Custom css -->
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+</head>
+
+<body ng-app="apiApp">
+    <div class="container" ng-controller="songLyricsController">
+        <nav class="navbar  navbar-dark my-3">
+            <a class="navbar-brand" href="#">
+                <img src="images/logo.png" alt="Hard Rock Solution">
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavId" aria-controls="collapsibleNavId" aria-expanded="false" aria-label="Toggle navigation">
+                <img src="images/toggler-icon.svg" alt="">
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavId">
+                <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Link</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dropdownId" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownId">
+                            <a class="dropdown-item" href="#">Action 1</a>
+                            <a class="dropdown-item" href="#">Action 2</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <main class="content-area">
+            <div class="search-bar col-md-6 mx-auto">
+                <h1 class="text-center">Lyrics Search</h1>
+                <div class="search-box my-5">
+                    <input type="text" class="form-control" placeholder="Enter your artist song name" ng-model="songName">
+                    <button class="btn btn-success search-btn" ng-click="Init()">Search</button>
+                </div>
+            </div>
+            <!-- === Simple results === -->
+            <div class="d-flex justify-content-center" ng-repeat="getSong in Songs.data" ng-if="$index <= 9">
+                <div class="">
+                    <p class="author lead">
+                        <strong>{{getSong.title}} </strong> Album by <span>{{getSong.artist.name}}</span>
+                        <button class="btn btn-success" ng-click="GetLyrics(getSong.title, getSong.artist.name)">Get Lyrics</button>
+                    </p>
+                    <br />
+                </div>
+            </div>            
+            <!-- === Fancy results === -->
+            <div ng-repeat="getSong in Songs.data" ng-if="$index <= 9">
+                <div class="search-result col-md-8 mx-auto py-4">
+                    <!-- single result -->
+                    <div class="single-result row align-items-center my-3 p-3">
+                        <div class="col-md-9">
+                            <h3 class="lyrics-name">{{getSong.title}}</h3>
+                            <p class="author lead">Album by <span>{{getSong.artist.name}}</span></p>
+                            <p class="author lead">Duration <span>{{getSong.duration}}</span></p>
+                        </div>
+                        <div class="col-md-3 text-md-right text-center">
+                            <button class="btn btn-success" ng-click="GetLyrics(getSong.title, getSong.artist.name)">Get Lyrics</button>
+                        </div>
+                    </div>
+                    <!-- ./ single result -->
+
+                </div>
+            </div>
+            
+
+            <!-- Single Lyrics -->
+            <div class="single-lyrics text-center" ng-show="ViewData == 1">
+                <button class="btn btn-danger go-back" ng-click="Back()">Back</button>
+                <h2 class="text-success mb-4">{{selectedSongName}} - {{selectedBandName}}</h2>
+                <pre class="lyric text-white">
+                    {{selectedLyrics}} 
+                </pre>
+            </div>
+
+        </main>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- Custom Script Here -->
+    <!-- My Script -->
+
+    <script>
+        var app = angular.module('apiApp', []);
+
+        app.controller('songLyricsController', function ($scope, $http) {
+
+            $scope.ViewData = 0;
+
+            $scope.Songs = [];
+            $scope.selectedLyrics = {};
+            $scope.selectedSongName = {};
+            $scope.selectedBandName = {};
+
+            $scope.Init = function () {
+                $scope.GetSong();
+            };
+
+            $scope.GetSong = function () {
+                $http({
+                    method: "GET",
+                    url: "https://api.lyrics.ovh/suggest/" + $scope.songName
+                }).then(
+
+                    function mySuccess(response) {
+                        //alert('Success');
+                        $scope.Songs = response.data;
+                        console.log(response.data);
+                    },
+
+                    function myError(response) {
+                        alert('Not Success');
+                        //$scope.Activity = response.data;
+                        console.log(response.data);
+                        //$scope.myWelcome = response.statusText;
+                    });
+            };
+
+            $scope.GetLyrics = function (songTitle, artist) {
+                //alert(songTitle);
+                //alert(artist);
+
+                $http({
+                    method: "GET",
+                    url: "https://api.lyrics.ovh/v1/" + artist + "/" + songTitle
+                }).then(
+
+                    function mySuccess(response) {
+                        //alert('Success Lyrics');
+                        $scope.selectedLyrics = response.data;
+                        $scope.selectedSongName = songTitle;
+                        $scope.selectedBandName = artist;
+                        $scope.ViewData = 1;
+                        //console.log(response.data);
+                    },
+
+                    function myError(response) {
+                        alert('Not Success Lyrics');
+                        //$scope.Activity = response.data;
+                        console.log(response.data);
+                        //$scope.myWelcome = response.statusText;
+                    });
+
+            };
+
+            $scope.Back = function () {
+                $scope.ViewData = 0;
+            };
+        });
+    </script>
+
+</body>
+
+</html>
